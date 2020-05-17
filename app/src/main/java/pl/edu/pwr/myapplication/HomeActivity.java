@@ -13,80 +13,28 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-public class HomeActivity extends AppCompatActivity implements SensorEventListener, StepListener, View.OnClickListener {
-    private StepDetector stepDetector;
-    private SensorManager sensorManager;
-    private Sensor accelerometer;
-
-    private String numberOfStepsTxt = "Steps counted: ";
-    private int numSteps;
+public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
     private TextView numberOfStepsTxtView;
     private Button returnButton;
-    private String sharedPrefs = "mySharedPrefs";
+    private String numberOfStepsTxt = "Steps counted: ";
+
+    Intent pedometerService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        stepDetector = new StepDetector();
-        stepDetector.registerListener(this);
-
         numberOfStepsTxtView = findViewById(R.id.tv_steps);
         returnButton = findViewById(R.id.returnButton);
 
         returnButton.setOnClickListener(this);
 
-        loadData();
-    }
+        MessageReceiver receiver = new MessageReceiver(new Message());
 
-    private void saveData()
-    {
-        SharedPreferences sharedPreferences = getSharedPreferences(sharedPrefs, MODE_PRIVATE);
-        SharedPreferences.Editor myEdit = sharedPreferences.edit();
-        myEdit.putInt("steps", numSteps);
-        myEdit.commit();
-    }
-
-    private void loadData()
-    {
-        SharedPreferences sharedPref = getSharedPreferences(sharedPrefs, MODE_PRIVATE);
-        int a = sharedPref.getInt("steps", 0);
-        numSteps = a;
-        numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        sensorManager.unregisterListener(this);
-        saveData();
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            stepDetector.updateAccelerometer(event.timestamp, event.values[0], event.values[1], event.values[2]);
-        }
-    }
-
-    @Override
-    public void step(long timeNs) {
-        numSteps++;
-        numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
+        pedometerService = new Intent(this, PedometerService.class);
+        pedometerService.putExtra("receiver", receiver);
+        startService(pedometerService);
     }
 
     @Override
@@ -97,5 +45,30 @@ public class HomeActivity extends AppCompatActivity implements SensorEventListen
             startActivity(returnIntent);
         }
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        pedometerService.putExtra("resume", true);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        pedometerService.putExtra("pause", true);
+    }
+
+    public class Message {
+        public void displayMessage(int resultCode, Bundle resultData)
+        {
+            switch (resultCode)
+            {
+                case 1:
+                    numberOfStepsTxtView.setText(numberOfStepsTxt + resultData.getInt("stepsCounted"));
+                    break;
+            }
+        }
+    }
+
 }
 
