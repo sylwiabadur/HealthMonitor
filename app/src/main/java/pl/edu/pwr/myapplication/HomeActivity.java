@@ -32,6 +32,8 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     private boolean stoppedFlag = false;
     private boolean pausedFlag = false;
 
+    DatabaseHelper dbHelper;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
