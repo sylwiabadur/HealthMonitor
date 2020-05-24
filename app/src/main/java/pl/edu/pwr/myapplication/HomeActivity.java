@@ -12,29 +12,81 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
-public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
-    private TextView numberOfStepsTxtView;
-    private Button returnButton;
+public class HomeActivity extends AppCompatActivity implements View.OnClickListener, SensorEventListener, StepListener {
+    private TextView numberOfStepsTxtView, distanceTxtView;
+    private Button returnButton, startTrainingBtn, stopTrainingBtn, pauseTrainingBtn;
     private String numberOfStepsTxt = "Steps counted: ";
+    private String numberOfMetersTxt = "Distance measured [m]: ";
 
-    Intent pedometerService;
+    private StepDetector stepDetector;
+    private SensorManager sensorManager;
+    private Sensor accelerometer;
+
+    private int numSteps = 0;
+    private double metersForStep = 0.72;
+    private String sharedPrefs = "mySharedPrefs";
+
+    private boolean startedFlag = false;
+    private boolean stoppedFlag = false;
+    private boolean pausedFlag = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        stepDetector = new StepDetector();
+        stepDetector.registerListener(this);
+
         numberOfStepsTxtView = findViewById(R.id.tv_steps);
+        distanceTxtView = findViewById(R.id.distance);
+
         returnButton = findViewById(R.id.returnButton);
+        startTrainingBtn = findViewById(R.id.startTrainingBtn);
+        stopTrainingBtn = findViewById(R.id.stopTrainingBtn);
+        pauseTrainingBtn = findViewById(R.id.pauseTrainingBtn);
 
         returnButton.setOnClickListener(this);
+        startTrainingBtn.setOnClickListener(this);
+        stopTrainingBtn.setOnClickListener(this);
+        pauseTrainingBtn.setOnClickListener(this);
 
-        MessageReceiver receiver = new MessageReceiver(new Message());
+        loadData();
+    }
 
-        pedometerService = new Intent(this, PedometerService.class);
-        pedometerService.putExtra("receiver", receiver);
-        startService(pedometerService);
+    private void saveData()
+    {
+        SharedPreferences sharedPreferences = getSharedPreferences(sharedPrefs, MODE_PRIVATE);
+        SharedPreferences.Editor myEdit = sharedPreferences.edit();
+        myEdit.putInt("steps", numSteps);
+        myEdit.commit();
+    }
+    private void saveFlags()
+    {
+        SharedPreferences sharedPreferences = getSharedPreferences(sharedPrefs, MODE_PRIVATE);
+        SharedPreferences.Editor myEdit = sharedPreferences.edit();
+        myEdit.putBoolean("startFlag", startedFlag);
+        myEdit.putBoolean("stopFlag", stoppedFlag);
+        myEdit.putBoolean("pauseFlag", pausedFlag);
+        myEdit.commit();
+    }
+
+    private void loadData()
+    {
+        SharedPreferences sharedPref = getSharedPreferences(sharedPrefs, MODE_PRIVATE);
+        int a = sharedPref.getInt("steps", 0);
+        startedFlag = sharedPref.getBoolean("startFlag", false);
+        stoppedFlag = sharedPref.getBoolean("stopFlag", false);
+        pausedFlag = sharedPref.getBoolean("pauseFlag", false);
+        numSteps = 0;
+        System.out.println("LOAD DATA!!!!!!!!!!!!!!!");
+        numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
+        distanceTxtView.setText(numberOfMetersTxt+ (double)numSteps * metersForStep);
     }
 
     @Override
@@ -44,29 +96,75 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             Intent returnIntent = new Intent(HomeActivity.this, MainActivity.class);
             startActivity(returnIntent);
         }
+        if(v.getId() == R.id.startTrainingBtn)
+        {
+            startedFlag = true;
+            stoppedFlag = false;
+            pausedFlag = false;
+            Toast.makeText(HomeActivity.this, "Started training", Toast.LENGTH_SHORT).show();
+            startTrainingBtn.setEnabled(false);
+            returnButton.setEnabled(false);
+
+        }
+        if(v.getId() == R.id.stopTrainingBtn)
+        {
+            stoppedFlag = true;
+            startedFlag = false;
+            startTrainingBtn.setEnabled(true);
+            returnButton.setEnabled(true);
+            Toast.makeText(HomeActivity.this, "Stopped training", Toast.LENGTH_SHORT).show();
+        }
+        if(v.getId() == R.id.pauseTrainingBtn)
+        {
+            pausedFlag = true;
+            startTrainingBtn.setEnabled(true);
+            Toast.makeText(HomeActivity.this, "Paused training", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        pedometerService.putExtra("resume", true);
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+        if(startedFlag==true)
+        {
+            numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
+            distanceTxtView.setText(numberOfMetersTxt + (double)numSteps * metersForStep);
+        }
+        System.out.println("NOT HERE ON RESUME !!!!!!!!!!!!!!!!!!");
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        pedometerService.putExtra("pause", true);
+        sensorManager.unregisterListener(this);
+        saveFlags();
+        if(startedFlag==true)
+        {
+            saveData();
+        }
+        System.out.println("NOT HERE ON PAUSE !!!!!!!!!!!!!!!!!!");
     }
 
-    public class Message {
-        public void displayMessage(int resultCode, Bundle resultData)
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        System.out.println("ON CHANGED SENSOR !!!!!!!!!!!!");
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            stepDetector.updateAccelerometer(event.timestamp, event.values[0], event.values[1], event.values[2]);
+        }
+    }
+
+    @Override
+    public void step(long timeNs) {
+        if(startedFlag==true && pausedFlag==false && stoppedFlag==false)
         {
-            switch (resultCode)
-            {
-                case 1:
-                    numberOfStepsTxtView.setText(numberOfStepsTxt + resultData.getInt("stepsCounted"));
-                    break;
-            }
+            numSteps++;
+            numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
+            distanceTxtView.setText(numberOfMetersTxt + (double)numSteps * metersForStep);
         }
     }
 
