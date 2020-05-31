@@ -14,6 +14,10 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class HomeActivity extends AppCompatActivity implements View.OnClickListener, SensorEventListener, StepListener {
     private TextView numberOfStepsTxtView, distanceTxtView;
     private Button returnButton, startTrainingBtn, stopTrainingBtn, pauseTrainingBtn;
@@ -39,6 +43,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        dbHelper = new DatabaseHelper(this);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -115,6 +120,11 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             startTrainingBtn.setEnabled(true);
             returnButton.setEnabled(true);
             Toast.makeText(HomeActivity.this, "Stopped training", Toast.LENGTH_SHORT).show();
+            if(stopTraining())
+            {
+                Toast.makeText(HomeActivity.this, "Data added successfully to db", Toast.LENGTH_SHORT).show();
+            }
+            else  Toast.makeText(HomeActivity.this, "Sth went wrong while adding to db", Toast.LENGTH_SHORT).show();
         }
         if(v.getId() == R.id.pauseTrainingBtn)
         {
@@ -122,6 +132,14 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             startTrainingBtn.setEnabled(true);
             Toast.makeText(HomeActivity.this, "Paused training", Toast.LENGTH_SHORT).show();
         }
+    }
+    boolean stopTraining()
+    {
+        Date today = new Date();
+        DateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
+        String strDate = dateFormat.format(today);
+
+        return dbHelper.addData(numSteps, numSteps * metersForStep, strDate);
     }
 
     @Override

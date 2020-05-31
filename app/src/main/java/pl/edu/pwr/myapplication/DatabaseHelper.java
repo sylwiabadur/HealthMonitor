@@ -2,6 +2,7 @@ package pl.edu.pwr.myapplication;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
@@ -30,6 +31,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP IF TABLE EXISTS " + TABLE_NAME);
         onCreate(db);
     }
+
     public boolean addData(int steps, double distance, String date)
     {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -43,5 +45,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if(result == -1)
             return false;
         else return true;
+    }
+
+    public Cursor getData()
+    {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "SELECT * FROM " + TABLE_NAME;
+        Cursor data = db.rawQuery(query,null);
+        return data;
     }
 }
