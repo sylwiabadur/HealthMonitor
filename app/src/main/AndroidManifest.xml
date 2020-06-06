@@ -42,14 +42,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <receiver
-            android:name=".AlarmReceiver"
-            android:process=":remote" >
-        </receiver>
 
-        <service
-            android:name=".LocationService"
-            android:exported="false" />
+        <receiver
+            android:name=".LocationService" />
     </application>
 
 </manifest>

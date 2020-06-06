@@ -1,12 +1,15 @@
 package pl.edu.pwr.myapplication;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
-import android.app.AlarmManager;
+
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -17,7 +20,18 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionDeniedResponse;
+import com.karumi.dexter.listener.PermissionGrantedResponse;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.single.PermissionListener;
+
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -43,11 +57,15 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     DatabaseHelper dbHelper;
 
+    LocationRequest locationRequest;
+    FusedLocationProviderClient fusedLocationProviderClient;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
         dbHelper = new DatabaseHelper(this);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -69,6 +87,72 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         pauseTrainingBtn.setOnClickListener(this);
 
         loadData();
+
+        Dexter.withActivity(this).withPermission(Manifest.permission.ACCESS_FINE_LOCATION).withListener(new PermissionListener() {
+            @Override
+            public void onPermissionGranted(PermissionGrantedResponse response) {
+                updateLocation();
+            }
+
+            @Override
+            public void onPermissionDenied(PermissionDeniedResponse response) {
+                Toast.makeText(HomeActivity.this, "You must accept this location", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
+
+            }
+        }).check();
+    }
+
+    private void updateLocation() {
+        if(startedFlag==true && pausedFlag==false)
+        {
+            Toast.makeText(HomeActivity.this, "STARTED FLAG, UPDATE LOCATION", Toast.LENGTH_LONG).show();
+            buildLocationRequest();
+
+            fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+            fusedLocationProviderClient.requestLocationUpdates(locationRequest, getPendingIntent());
+        }
+    }
+
+    private PendingIntent getPendingIntent() {
+        Intent intent = new Intent(this, LocationService.class);
+        intent.setAction(LocationService.ACTION_PROCESS_UPDATE);
+
+        return PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    private void saveLocationToDb() {
+
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, getDbIntent());
+    }
+
+    private PendingIntent getDbIntent() {
+        Intent intent = new Intent(this, LocationService.class);
+        intent.setAction(LocationService.ACTION_SAVE_TO_DB);
+
+        return PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    @SuppressLint("RestrictedApi")
+    private void buildLocationRequest() {
+
+        System.out.println("LOCATION REQUEST !!!!!!!!!!!!!!!");
+
+        locationRequest = new LocationRequest();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(5000);
+        locationRequest.setFastestInterval(3000);
+        locationRequest.setSmallestDisplacement(10f);
     }
 
     private void saveData()
@@ -155,8 +239,11 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         DateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
         String strDate = dateFormat.format(today);
         double speedKmH = ((double)numSteps * metersForStep /1000)/((double)differenceTime/1000/3600);
+        double metersDistance = numSteps * metersForStep;
 
-        return dbHelper.addData(numSteps, numSteps * metersForStep, strDate, speedKmH);
+        saveLocationToDb(); // !!!!!!!!!!!!!!!!! WAŻNE
+
+        return dbHelper.addData(numSteps, metersDistance, strDate, speedKmH);
     }
 
     @Override
@@ -197,11 +284,12 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void step(long timeNs) {
+        DecimalFormat df = new DecimalFormat("0.00");
         if (startedFlag==true && pausedFlag==false && stoppedFlag==false)
         {
             numSteps++;
             numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
-            distanceTxtView.setText(numberOfMetersTxt + (double)numSteps * metersForStep);
+            distanceTxtView.setText(numberOfMetersTxt + df.format((double)numSteps * metersForStep));
         }
     }
 

@@ -40,7 +40,7 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
         listView = findViewById(R.id.listView);
 
         dbHelper = new DatabaseHelper(this);
-        populateListView(1); // by default sort by date
+        populateListView(3); // by default sort by date
     }
 
     private void populateListView(int option) {
@@ -49,9 +49,13 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
         {
             data = dbHelper.sortByDate();
         }
-        else
+        else if (option==2)
         {
             data = dbHelper.sortBySteps();
+        }
+        else
+        {
+            data = dbHelper.getData();
         }
         ArrayList<DataTuple> arrayOfTuples = new ArrayList<>();
         while(data.moveToNext())

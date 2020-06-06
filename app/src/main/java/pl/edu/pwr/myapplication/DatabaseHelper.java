@@ -8,8 +8,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import androidx.annotation.Nullable;
 
+import java.text.DecimalFormat;
+
 public class DatabaseHelper extends SQLiteOpenHelper {
-    private static final String TABLE_NAME = "step_distance_table";
+    private static final String TABLE_NAME = "step_distance_date_speed_table";
     private String COL1="ID";
     private String COL2="steps";
     private String COL3="distance";
@@ -35,12 +37,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public boolean addData(int steps, double distance, String date, double speed)
     {
+        DecimalFormat df = new DecimalFormat("0.00");
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL2, steps);
-        contentValues.put(COL3, distance);
+        contentValues.put(COL3, df.format(distance));
         contentValues.put(COL4, date);
-        contentValues.put(COL5, speed);
+        contentValues.put(COL5, df.format(speed));
 
         long result = db.insert(TABLE_NAME, null, contentValues);
 
@@ -49,13 +52,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         else return true;
     }
 
-//    public Cursor getData()
-//    {
-//        SQLiteDatabase db = this.getWritableDatabase();
-//        String query = "SELECT * FROM " + TABLE_NAME;
-//        Cursor data = db.rawQuery(query,null);
-//        return data;
-//    }
+    public Cursor getData()
+    {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "SELECT * FROM " + TABLE_NAME;
+        Cursor data = db.rawQuery(query,null);
+        return data;
+    }
 
     public Cursor sortByDate()
     {
