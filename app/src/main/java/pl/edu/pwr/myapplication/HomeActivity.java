@@ -69,26 +69,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         pauseTrainingBtn.setOnClickListener(this);
 
         loadData();
-        scheduleAlarm();
     }
-
-    public void scheduleAlarm() {
-        Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
-        final PendingIntent pIntent = PendingIntent.getBroadcast(this, AlarmReceiver.REQUEST_CODE,
-                intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        long firstMillis = System.currentTimeMillis();
-        AlarmManager alarm = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-        alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, firstMillis,
-                AlarmManager.INTERVAL_FIFTEEN_MINUTES/15, pIntent); /// !!!!!!!!!!
-    }
-    public void cancelAlarm() {
-        Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
-        final PendingIntent pIntent = PendingIntent.getBroadcast(this, AlarmReceiver.REQUEST_CODE,
-                intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        AlarmManager alarm = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-        alarm.cancel(pIntent);
-    }
-
 
     private void saveData()
     {
@@ -122,12 +103,12 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        if(v.getId() == R.id.returnButton)
+        if (v.getId() == R.id.returnButton)
         {
             Intent returnIntent = new Intent(HomeActivity.this, MainActivity.class);
             startActivity(returnIntent);
         }
-        if(v.getId() == R.id.startTrainingBtn)
+        if (v.getId() == R.id.startTrainingBtn)
         {
             if (startTime == 0)
             {
@@ -146,7 +127,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             returnButton.setEnabled(false);
 
         }
-        if(v.getId() == R.id.stopTrainingBtn)
+        if (v.getId() == R.id.stopTrainingBtn)
         {
             differenceTime = System.currentTimeMillis() - startTime;
             stoppedFlag = true;
@@ -154,13 +135,13 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             startTrainingBtn.setEnabled(true);
             returnButton.setEnabled(true);
             Toast.makeText(HomeActivity.this, "Stopped training", Toast.LENGTH_SHORT).show();
-            if(stopTraining())
+            if (stopTraining())
             {
                 Toast.makeText(HomeActivity.this, "Data added successfully to db", Toast.LENGTH_LONG).show();
             }
             else  Toast.makeText(HomeActivity.this, "Sth went wrong while adding to db", Toast.LENGTH_SHORT).show();
         }
-        if(v.getId() == R.id.pauseTrainingBtn)
+        if (v.getId() == R.id.pauseTrainingBtn)
         {
             differenceTime = System.currentTimeMillis() - startTime;
             pausedFlag = true;
@@ -182,7 +163,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     public void onResume() {
         super.onResume();
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-        if(startedFlag==true)
+        if (startedFlag==true)
         {
             numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
             distanceTxtView.setText(numberOfMetersTxt + (double)numSteps * metersForStep);
@@ -195,7 +176,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         super.onPause();
         sensorManager.unregisterListener(this);
         saveFlags();
-        if(startedFlag==true)
+        if (startedFlag==true)
         {
             saveData();
         }
@@ -216,7 +197,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void step(long timeNs) {
-        if(startedFlag==true && pausedFlag==false && stoppedFlag==false)
+        if (startedFlag==true && pausedFlag==false && stoppedFlag==false)
         {
             numSteps++;
             numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
