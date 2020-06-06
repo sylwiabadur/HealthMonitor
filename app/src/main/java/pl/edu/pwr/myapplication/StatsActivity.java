@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.Switch;
 
 import java.lang.reflect.Array;
 import java.util.AbstractMap;
@@ -22,6 +23,7 @@ import java.util.Map;
 public class StatsActivity extends AppCompatActivity implements View.OnClickListener {
 
     private Button returnBtn;
+    private Switch sortByBtn;
     private DatabaseHelper dbHelper;
     private ListView listView;
 
@@ -32,13 +34,25 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
 
         returnBtn = findViewById(R.id.returnFromStats);
         returnBtn.setOnClickListener(this);
+        sortByBtn = findViewById(R.id.sortBy);
+        sortByBtn.setOnClickListener(this);
+
         listView = findViewById(R.id.listView);
+
         dbHelper = new DatabaseHelper(this);
-        populateListView();
+        populateListView(1); // by default sort by date
     }
 
-    private void populateListView() {
-        Cursor data = dbHelper.sortByDate();
+    private void populateListView(int option) {
+        Cursor data;
+        if (option == 1)
+        {
+            data = dbHelper.sortByDate();
+        }
+        else
+        {
+            data = dbHelper.sortBySteps();
+        }
         ArrayList<DataTuple> arrayOfTuples = new ArrayList<>();
         while(data.moveToNext())
         {
@@ -55,6 +69,16 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
         {
             Intent returnIntent = new Intent(StatsActivity.this, MainActivity.class);
             startActivity(returnIntent);
+        }
+        if(sortByBtn.isChecked())
+        {
+            sortByBtn.setText("By steps");
+            populateListView(2);
+        }
+        if(!sortByBtn.isChecked())
+        {
+            sortByBtn.setText("By date");
+            populateListView(1);
         }
     }
 }

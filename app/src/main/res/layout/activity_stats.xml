@@ -16,7 +16,7 @@
         app:layout_constraintHorizontal_bias="0.95"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.064" />
+        app:layout_constraintVertical_bias="0.008" />
 
     <ListView
         android:id="@+id/listView"
@@ -26,4 +26,17 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0"
         tools:layout_editor_absoluteX="-34dp" />
+
+    <Switch
+        android:id="@+id/sortBy"
+        android:layout_width="97dp"
+        android:layout_height="38dp"
+        android:text="By date"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.949"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.076" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
