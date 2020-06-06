@@ -2,6 +2,9 @@ package pl.edu.pwr.myapplication;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.Sensor;
@@ -64,7 +67,26 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         pauseTrainingBtn.setOnClickListener(this);
 
         loadData();
+        scheduleAlarm();
     }
+
+    public void scheduleAlarm() {
+        Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
+        final PendingIntent pIntent = PendingIntent.getBroadcast(this, AlarmReceiver.REQUEST_CODE,
+                intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        long firstMillis = System.currentTimeMillis();
+        AlarmManager alarm = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+        alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, firstMillis,
+                AlarmManager.INTERVAL_FIFTEEN_MINUTES/15, pIntent); /// !!!!!!!!!!
+    }
+    public void cancelAlarm() {
+        Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
+        final PendingIntent pIntent = PendingIntent.getBroadcast(this, AlarmReceiver.REQUEST_CODE,
+                intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager alarm = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+        alarm.cancel(pIntent);
+    }
+
 
     private void saveData()
     {

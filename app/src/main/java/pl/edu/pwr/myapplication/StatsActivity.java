@@ -10,8 +10,14 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
 
+import java.lang.reflect.Array;
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 public class StatsActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -32,16 +38,15 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private void populateListView() {
-        Cursor data = dbHelper.getData();
-        ArrayList<String> dataList = new ArrayList<String>();
+        Cursor data = dbHelper.sortByDate();
+        ArrayList<DataTuple> arrayOfTuples = new ArrayList<>();
         while(data.moveToNext())
         {
-            dataList.add(data.getString(1));
-            dataList.add(data.getString(2));
-            dataList.add(data.getString(3));
+            DataTuple dataTuple = new DataTuple(data.getString(3), data.getString(1), data.getString(2));
+            arrayOfTuples.add(dataTuple);
         }
-        ListAdapter listAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, dataList);
-        listView.setAdapter(listAdapter);
+        DataAdapter adapter = new DataAdapter(this, arrayOfTuples);
+        listView.setAdapter(adapter);
     }
 
     @Override
