@@ -25,10 +25,12 @@ public class DataAdapter extends ArrayAdapter<DataTuple> {
         TextView tvDate = (TextView) convertView.findViewById(R.id.dateTuple);
         TextView tvSteps = (TextView) convertView.findViewById(R.id.stepsTuple);
         TextView tvDistance = (TextView) convertView.findViewById(R.id.distanceTuple);
+        TextView tvSpeed = (TextView) convertView.findViewById(R.id.speedTuple);
 
         tvDate.setText("Date:" + dataTuple.date);
         tvSteps.setText("Steps: " + dataTuple.steps);
         tvDistance.setText("Distance [m]:" + dataTuple.distance);
+        tvSpeed.setText("Speed [km/h]:" + dataTuple.speed);
 
         return convertView;
     }

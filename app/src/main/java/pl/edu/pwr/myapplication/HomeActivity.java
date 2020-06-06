@@ -34,6 +34,8 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     private int numSteps = 0;
     private double metersForStep = 0.72;
     private String sharedPrefs = "mySharedPrefs";
+    private long startTime = 0;
+    private long differenceTime;
 
     private boolean startedFlag = false;
     private boolean stoppedFlag = false;
@@ -127,6 +129,15 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
         if(v.getId() == R.id.startTrainingBtn)
         {
+            if (startTime == 0)
+            {
+                startTime = System.currentTimeMillis(); // nie bylo wczesniej pomiaru
+            }
+            else
+            {
+                startTime = differenceTime + System.currentTimeMillis(); // byl wczesniej pomiar
+            }
+
             startedFlag = true;
             stoppedFlag = false;
             pausedFlag = false;
@@ -137,6 +148,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
         if(v.getId() == R.id.stopTrainingBtn)
         {
+            differenceTime = System.currentTimeMillis() - startTime;
             stoppedFlag = true;
             startedFlag = false;
             startTrainingBtn.setEnabled(true);
@@ -144,12 +156,13 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             Toast.makeText(HomeActivity.this, "Stopped training", Toast.LENGTH_SHORT).show();
             if(stopTraining())
             {
-                Toast.makeText(HomeActivity.this, "Data added successfully to db", Toast.LENGTH_SHORT).show();
+                Toast.makeText(HomeActivity.this, "Data added successfully to db", Toast.LENGTH_LONG).show();
             }
             else  Toast.makeText(HomeActivity.this, "Sth went wrong while adding to db", Toast.LENGTH_SHORT).show();
         }
         if(v.getId() == R.id.pauseTrainingBtn)
         {
+            differenceTime = System.currentTimeMillis() - startTime;
             pausedFlag = true;
             startTrainingBtn.setEnabled(true);
             Toast.makeText(HomeActivity.this, "Paused training", Toast.LENGTH_SHORT).show();
@@ -160,8 +173,9 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         Date today = new Date();
         DateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
         String strDate = dateFormat.format(today);
+        double speedKmH = ((double)numSteps * metersForStep /1000)/((double)differenceTime/1000/3600);
 
-        return dbHelper.addData(numSteps, numSteps * metersForStep, strDate);
+        return dbHelper.addData(numSteps, numSteps * metersForStep, strDate, speedKmH);
     }
 
     @Override

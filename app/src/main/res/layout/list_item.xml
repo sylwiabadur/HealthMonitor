@@ -26,4 +26,12 @@
         android:textSize="16sp"
         android:textStyle="bold"
         android:text="Distance" />
+    <TextView
+        android:id="@+id/speedTuple"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:text="Speed [km/h]" />
 </LinearLayout>

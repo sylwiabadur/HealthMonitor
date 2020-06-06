@@ -56,7 +56,7 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
         ArrayList<DataTuple> arrayOfTuples = new ArrayList<>();
         while(data.moveToNext())
         {
-            DataTuple dataTuple = new DataTuple(data.getString(3), data.getString(1), data.getString(2));
+            DataTuple dataTuple = new DataTuple(data.getString(3), data.getString(1), data.getString(2), data.getString(4));
             arrayOfTuples.add(dataTuple);
         }
         DataAdapter adapter = new DataAdapter(this, arrayOfTuples);

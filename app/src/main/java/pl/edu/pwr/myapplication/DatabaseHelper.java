@@ -14,6 +14,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private String COL2="steps";
     private String COL3="distance";
     private String COL4="date";
+    private String COL5="speed";
 
     public DatabaseHelper(@Nullable Context context) {
         super(context, TABLE_NAME, null, 1);
@@ -22,7 +23,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String createTable = "CREATE TABLE " + TABLE_NAME + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
-            COL2 + " INTEGER," + COL3 + " REAL, " + COL4 + " DATE)";
+            COL2 + " INTEGER," + COL3 + " REAL, " + COL4 + " DATE, "+ COL5 + " REAL)";
         db.execSQL(createTable);
     }
 
@@ -32,13 +33,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public boolean addData(int steps, double distance, String date)
+    public boolean addData(int steps, double distance, String date, double speed)
     {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL2, steps);
         contentValues.put(COL3, distance);
         contentValues.put(COL4, date);
+        contentValues.put(COL5, speed);
 
         long result = db.insert(TABLE_NAME, null, contentValues);
 
