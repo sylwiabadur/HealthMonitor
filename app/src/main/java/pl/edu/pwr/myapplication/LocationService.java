@@ -8,8 +8,10 @@ import android.widget.Toast;
 
 import com.google.android.gms.location.LocationResult;
 
-import java.lang.reflect.Array;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class LocationService extends BroadcastReceiver {
     public static final String ACTION_PROCESS_UPDATE="edmt.dev.googlelocationbackground.UPDATE_LOCATION";
@@ -73,8 +75,14 @@ public class LocationService extends BroadcastReceiver {
 
     public void saveToDb()
     {
-        locationDataBaseHelper.addData(convertArrayToString(latitude), convertArrayToString(longitude));
-        //clear arrays
+        Date today = new Date();
+        DateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
+        String strDate = dateFormat.format(today);
+
+        locationDataBaseHelper.addData(convertArrayToString(latitude), convertArrayToString(longitude), strDate);
+
+        latitude.clear();
+        longitude.clear();
     }
 
 

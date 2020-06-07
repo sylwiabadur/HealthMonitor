@@ -241,7 +241,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         double speedKmH = ((double)numSteps * metersForStep /1000)/((double)differenceTime/1000/3600);
         double metersDistance = numSteps * metersForStep;
 
-        saveLocationToDb(); // !!!!!!!!!!!!!!!!! WAŻNE
+        saveLocationToDb();
 
         return dbHelper.addData(numSteps, metersDistance, strDate, speedKmH);
     }

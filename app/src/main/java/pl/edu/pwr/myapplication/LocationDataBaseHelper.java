@@ -9,10 +9,11 @@ import android.database.sqlite.SQLiteOpenHelper;
 import androidx.annotation.Nullable;
 
 public class LocationDataBaseHelper extends SQLiteOpenHelper {
-    private static final String TABLE_NAME = "location_table";
+    private static final String TABLE_NAME = "date_location_table";
     private String COL1="ID";
     private String COL2="longitude";
     private String COL3="latitude";
+    private String COL4="date";
 
 
     public LocationDataBaseHelper(@Nullable Context context) {
@@ -22,7 +23,7 @@ public class LocationDataBaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String createTable = "CREATE TABLE " + TABLE_NAME + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                COL2 + " TEXT, " + COL3 + " TEXT)";
+                COL2 + " TEXT, " + COL3 + " TEXT, " + COL4 + " DATE)";
         db.execSQL(createTable);
     }
 
@@ -32,12 +33,13 @@ public class LocationDataBaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public boolean addData(String longitude, String latitude)
+    public boolean addData(String longitude, String latitude, String date)
     {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL2, longitude);
         contentValues.put(COL3, latitude);
+        contentValues.put(COL4, date);
 
         long result = db.insert(TABLE_NAME, null, contentValues);
 
@@ -54,4 +56,11 @@ public class LocationDataBaseHelper extends SQLiteOpenHelper {
         return data;
     }
 
+    public Cursor getDataWhere(String date)
+    {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String query = "SELECT * FROM " + TABLE_NAME + " WHERE " + COL4 + " = " + date;
+        Cursor data = db.rawQuery(query,null);
+        return data;
+    }
 }

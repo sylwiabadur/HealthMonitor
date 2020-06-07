@@ -34,4 +34,11 @@
         android:textSize="16sp"
         android:textStyle="bold"
         android:text="Speed [km/h]" />
+
+    <Button
+        android:id="@+id/showRouteBtn"
+        style="@style/Widget.AppCompat.Button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Show route" />
 </LinearLayout>
