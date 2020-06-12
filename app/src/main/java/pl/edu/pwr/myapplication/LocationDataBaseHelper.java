@@ -3,6 +3,7 @@ package pl.edu.pwr.myapplication;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
@@ -14,6 +15,7 @@ public class LocationDataBaseHelper extends SQLiteOpenHelper {
     private String COL2="longitude";
     private String COL3="latitude";
     private String COL4="date";
+    private String COL5="params_id";
 
 
     public LocationDataBaseHelper(@Nullable Context context) {
@@ -23,7 +25,7 @@ public class LocationDataBaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String createTable = "CREATE TABLE " + TABLE_NAME + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                COL2 + " TEXT, " + COL3 + " TEXT, " + COL4 + " DATE)";
+                COL2 + " TEXT, " + COL3 + " TEXT, " + COL4 + " DATE, " + COL5 + " INTEGER )";
         db.execSQL(createTable);
     }
 
@@ -33,13 +35,14 @@ public class LocationDataBaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public boolean addData(String longitude, String latitude, String date)
+    public boolean addData(String longitude, String latitude, String date, String params_id)
     {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL2, longitude);
         contentValues.put(COL3, latitude);
         contentValues.put(COL4, date);
+        contentValues.put(COL5, params_id);
 
         long result = db.insert(TABLE_NAME, null, contentValues);
 
@@ -56,10 +59,10 @@ public class LocationDataBaseHelper extends SQLiteOpenHelper {
         return data;
     }
 
-    public Cursor getDataWhere(String date)
+    public Cursor getDataWhere(String params_id)
     {
         SQLiteDatabase db = this.getWritableDatabase();
-        String query = "SELECT * FROM " + TABLE_NAME + " WHERE " + COL4 + " = " + date;
+        String query = "SELECT * FROM " + TABLE_NAME + " WHERE " + COL5 + " = " + params_id;
         Cursor data = db.rawQuery(query,null);
         return data;
     }

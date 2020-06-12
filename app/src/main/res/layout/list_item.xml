@@ -11,6 +11,14 @@
         android:textStyle="bold"
         android:text="Date" />
     <TextView
+        android:id="@+id/idTuple"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/holo_orange_light"
+        android:textSize="21sp"
+        android:textStyle="bold"
+        android:text="Id" />
+    <TextView
         android:id="@+id/stepsTuple"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

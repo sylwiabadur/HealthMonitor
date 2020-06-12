@@ -60,7 +60,7 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
         ArrayList<DataTuple> arrayOfTuples = new ArrayList<>();
         while(data.moveToNext())
         {
-            DataTuple dataTuple = new DataTuple(data.getString(3), data.getString(1), data.getString(2), data.getString(4));
+            DataTuple dataTuple = new DataTuple(data.getString(3), data.getString(1), data.getString(2), data.getString(4), data.getString(0));
             arrayOfTuples.add(dataTuple);
         }
         DataAdapter adapter = new DataAdapter(this, arrayOfTuples);
@@ -74,11 +74,13 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
             Intent returnIntent = new Intent(StatsActivity.this, MainActivity.class);
             startActivity(returnIntent);
         }
+
         if(sortByBtn.isChecked())
         {
             sortByBtn.setText("By steps");
             populateListView(2);
         }
+
         if(!sortByBtn.isChecked())
         {
             sortByBtn.setText("By date");

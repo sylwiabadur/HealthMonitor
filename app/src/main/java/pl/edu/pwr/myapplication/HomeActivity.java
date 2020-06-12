@@ -3,13 +3,13 @@ package pl.edu.pwr.myapplication;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
-
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -87,35 +87,18 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         pauseTrainingBtn.setOnClickListener(this);
 
         loadData();
-
-        Dexter.withActivity(this).withPermission(Manifest.permission.ACCESS_FINE_LOCATION).withListener(new PermissionListener() {
-            @Override
-            public void onPermissionGranted(PermissionGrantedResponse response) {
-                updateLocation();
-            }
-
-            @Override
-            public void onPermissionDenied(PermissionDeniedResponse response) {
-                Toast.makeText(HomeActivity.this, "You must accept this location", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
-
-            }
-        }).check();
+        buildLocationRequest();
     }
 
     private void updateLocation() {
-        if(startedFlag==true && pausedFlag==false)
-        {
-            Toast.makeText(HomeActivity.this, "STARTED FLAG, UPDATE LOCATION", Toast.LENGTH_LONG).show();
-            buildLocationRequest();
+        Toast.makeText(HomeActivity.this, "STARTED FLAG, UPDATE LOCATION", Toast.LENGTH_LONG).show();
 
-            fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                return;
-            }
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        if (stoppedFlag == false && startedFlag==true)
+        {
             fusedLocationProviderClient.requestLocationUpdates(locationRequest, getPendingIntent());
         }
     }
@@ -128,17 +111,41 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void saveLocationToDb() {
-
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest, getDbIntent());
+        if (stoppedFlag==true && startedFlag==false)
+        {
+            System.out.println("SAVE LOCATION TO DB!!!!!!!");
+            fusedLocationProviderClient.requestLocationUpdates(locationRequest, getDbIntent());
+        }
     }
 
     private PendingIntent getDbIntent() {
         Intent intent = new Intent(this, LocationService.class);
         intent.setAction(LocationService.ACTION_SAVE_TO_DB);
+        System.out.println("GET DB INTENT!!!!!!");
+        String params_id = "";
+        Cursor data = dbHelper.getLastId();
+        while(data.moveToNext())
+        {
+            params_id = data.getString(0);
+        }
+        if(params_id == null )
+        {
+            int i = 1;
+            params_id = String.valueOf(i);
+        }
+        else
+        {
+            int i = Integer.parseInt(params_id);
+            i++;
+            params_id = String.valueOf(i);
+
+        }
+        System.out.println(params_id + "!!!!!!!!!!!!!!!!!!!!!!!!============================");
+        intent.putExtra("lastId", params_id);
 
         return PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
@@ -146,12 +153,12 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     @SuppressLint("RestrictedApi")
     private void buildLocationRequest() {
 
-        System.out.println("LOCATION REQUEST !!!!!!!!!!!!!!!");
+        Toast.makeText(HomeActivity.this, "LOCATION REQUEST", Toast.LENGTH_LONG).show();
 
         locationRequest = new LocationRequest();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(5000);
-        locationRequest.setFastestInterval(3000);
+        locationRequest.setInterval(1000);
+        locationRequest.setFastestInterval(1000);
         locationRequest.setSmallestDisplacement(10f);
     }
 
@@ -180,7 +187,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         stoppedFlag = sharedPref.getBoolean("stopFlag", false);
         pausedFlag = sharedPref.getBoolean("pauseFlag", false);
         numSteps = 0;
-        System.out.println("LOAD DATA!!!!!!!!!!!!!!!");
         numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
         distanceTxtView.setText(numberOfMetersTxt+ (double)numSteps * metersForStep);
     }
@@ -210,7 +216,24 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             startTrainingBtn.setEnabled(false);
             returnButton.setEnabled(false);
 
+            Dexter.withActivity(this).withPermission(Manifest.permission.ACCESS_FINE_LOCATION).withListener(new PermissionListener() {
+                @Override
+                public void onPermissionGranted(PermissionGrantedResponse response) {
+                    updateLocation();
+                }
+
+                @Override
+                public void onPermissionDenied(PermissionDeniedResponse response) {
+                    Toast.makeText(HomeActivity.this, "You must accept this location", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
+
+                }
+            }).check();
         }
+
         if (v.getId() == R.id.stopTrainingBtn)
         {
             differenceTime = System.currentTimeMillis() - startTime;
@@ -276,7 +299,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        System.out.println("ON CHANGED SENSOR !!!!!!!!!!!!");
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             stepDetector.updateAccelerometer(event.timestamp, event.values[0], event.values[1], event.values[2]);
         }

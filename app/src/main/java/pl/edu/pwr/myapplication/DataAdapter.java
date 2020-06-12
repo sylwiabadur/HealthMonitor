@@ -29,19 +29,22 @@ public class DataAdapter extends ArrayAdapter<DataTuple> {
         {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_item, parent, false);
         }
-        final TextView tvDate = (TextView) convertView.findViewById(R.id.dateTuple);
+
+        TextView tvDate = (TextView) convertView.findViewById(R.id.dateTuple);
         TextView tvSteps = (TextView) convertView.findViewById(R.id.stepsTuple);
         TextView tvDistance = (TextView) convertView.findViewById(R.id.distanceTuple);
         TextView tvSpeed = (TextView) convertView.findViewById(R.id.speedTuple);
+        final TextView tvId = (TextView) convertView.findViewById(R.id.idTuple);
         Button btn = (Button) convertView.findViewById(R.id.showRouteBtn);
+
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getContext(), "BUTTON CLICKED " + tvDate.getText().toString(), Toast.LENGTH_LONG).show();
-                Intent showRoute = new Intent(getContext(), ShowRoute.class);
-                String dateToFindBy =  tvDate.getText().toString();
-                dateToFindBy = dateToFindBy.substring(5,dateToFindBy.length());
-                showRoute.putExtra("date_to_find_by", dateToFindBy); // pass date to find location array by date from second db
+                Toast.makeText(getContext(), "BUTTON CLICKED " + tvId.getText().toString(), Toast.LENGTH_LONG).show();
+                Intent showRoute = new Intent(getContext(), MapsActivity.class);
+                String idToFindBy =  tvId.getText().toString();
+                idToFindBy = idToFindBy.substring(3,idToFindBy.length());
+                showRoute.putExtra("id_to_find_by", idToFindBy); // pass id to find location array by id from second db
                 ctx.startActivity(showRoute);
             }
         });
@@ -50,6 +53,7 @@ public class DataAdapter extends ArrayAdapter<DataTuple> {
         tvSteps.setText("Steps: " + dataTuple.steps);
         tvDistance.setText("Distance [m]:" + dataTuple.distance);
         tvSpeed.setText("Speed [km/h]:" + dataTuple.speed);
+        tvId.setText("Id:" + dataTuple.id);
 
         return convertView;
     }

@@ -17,8 +17,8 @@ public class LocationService extends BroadcastReceiver {
     public static final String ACTION_PROCESS_UPDATE="edmt.dev.googlelocationbackground.UPDATE_LOCATION";
     public static final String ACTION_SAVE_TO_DB="edmt.dev.googlelocationbackground.SAVE_TO_DB";
     LocationDataBaseHelper locationDataBaseHelper;
-    ArrayList<Double> latitude;
-    ArrayList<Double> longitude;
+    private static final ArrayList<Double> latitude = new ArrayList<>();
+    private static final ArrayList<Double> longitude = new ArrayList<>();
 
     public LocationService() { }
 
@@ -26,16 +26,16 @@ public class LocationService extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
 
         locationDataBaseHelper = new LocationDataBaseHelper(context);
-        latitude = new ArrayList<>();
-        longitude = new ArrayList<>();
 
         Toast.makeText(context, "SERVICE IS  WORKING!!!!!", Toast.LENGTH_SHORT).show();
+        System.out.println("SERVICE WORKING! -__-------------------------------------------__!!!!!!!!!!!!!!!");
 
         if (intent!=null)
         {
             final String action = intent.getAction();
             if(ACTION_PROCESS_UPDATE.equals(action))
             {
+                Toast.makeText(context, "MEASURED!!!!!", Toast.LENGTH_SHORT).show();
                 LocationResult result = LocationResult.extractResult(intent);
                 if(result!=null)
                 {
@@ -45,6 +45,7 @@ public class LocationService extends BroadcastReceiver {
                         latitude.add(location.getLatitude());
                         longitude.add(location.getLongitude());
                         Toast.makeText(context, locationStr, Toast.LENGTH_SHORT).show();
+                        System.out.println(locationStr);
                     }
                     catch (Exception e)
                     {
@@ -55,17 +56,17 @@ public class LocationService extends BroadcastReceiver {
             if (ACTION_SAVE_TO_DB.equals(action))
             {
                 Toast.makeText(context, "SAVING TO DB", Toast.LENGTH_LONG).show();
-                saveToDb();
+                String params_id = intent.getExtras().getString("lastId");
+                saveToDb(locationDataBaseHelper, params_id);
             }
         }
     }
 
-    public static String strSeparator = "__,__";
+    public static String strSeparator = ";";
     public static String convertArrayToString(ArrayList<Double> array){
         String str = "";
         for (int i = 0;i<array.size(); i++) {
             str = str+array.get(i);
-
             if(i<array.size()-1){
                 str = str+strSeparator;
             }
@@ -73,13 +74,15 @@ public class LocationService extends BroadcastReceiver {
         return str;
     }
 
-    public void saveToDb()
+    public void saveToDb(LocationDataBaseHelper dbHelper, String params_id)
     {
         Date today = new Date();
         DateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
         String strDate = dateFormat.format(today);
-
-        locationDataBaseHelper.addData(convertArrayToString(latitude), convertArrayToString(longitude), strDate);
+        if(!longitude.isEmpty() && !latitude.isEmpty())
+        {
+            dbHelper.addData(convertArrayToString(latitude), convertArrayToString(longitude), strDate, params_id);
+        }
 
         latitude.clear();
         longitude.clear();
