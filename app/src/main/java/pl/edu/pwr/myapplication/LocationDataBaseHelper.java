@@ -3,7 +3,6 @@ package pl.edu.pwr.myapplication;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
@@ -51,13 +50,6 @@ public class LocationDataBaseHelper extends SQLiteOpenHelper {
         else return true;
     }
 
-    public Cursor getData()
-    {
-        SQLiteDatabase db = this.getWritableDatabase();
-        String query = "SELECT * FROM " + TABLE_NAME;
-        Cursor data = db.rawQuery(query,null);
-        return data;
-    }
 
     public Cursor getDataWhere(String params_id)
     {

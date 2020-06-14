@@ -22,7 +22,6 @@ import java.util.Map;
 
 public class StatsActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private Button returnBtn;
     private Switch sortByBtn;
     private DatabaseHelper dbHelper;
     private ListView listView;
@@ -32,8 +31,6 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stats);
 
-        returnBtn = findViewById(R.id.returnFromStats);
-        returnBtn.setOnClickListener(this);
         sortByBtn = findViewById(R.id.sortBy);
         sortByBtn.setOnClickListener(this);
 
@@ -69,12 +66,6 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     public void onClick(View v) {
-        if(v.getId() == R.id.returnFromStats)
-        {
-            Intent returnIntent = new Intent(StatsActivity.this, MainActivity.class);
-            startActivity(returnIntent);
-        }
-
         if(sortByBtn.isChecked())
         {
             sortByBtn.setText("By steps");

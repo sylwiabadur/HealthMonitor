@@ -28,7 +28,6 @@ public class LocationService extends BroadcastReceiver {
         locationDataBaseHelper = new LocationDataBaseHelper(context);
 
         Toast.makeText(context, "SERVICE IS  WORKING!!!!!", Toast.LENGTH_SHORT).show();
-        System.out.println("SERVICE WORKING! -__-------------------------------------------__!!!!!!!!!!!!!!!");
 
         if (intent!=null)
         {
@@ -67,6 +66,7 @@ public class LocationService extends BroadcastReceiver {
         String str = "";
         for (int i = 0;i<array.size(); i++) {
             str = str+array.get(i);
+
             if(i<array.size()-1){
                 str = str+strSeparator;
             }

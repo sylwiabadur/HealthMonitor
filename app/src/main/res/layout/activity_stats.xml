@@ -4,29 +4,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".StatsActivity">
+    tools:context=".StatsActivity"
+    android:background="@drawable/gradient_bg">
 
-    <Button
-        android:id="@+id/returnFromStats"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Return"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.95"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.008" />
 
     <ListView
         android:id="@+id/listView"
-        android:layout_width="444dp"
-        android:layout_height="568dp"
-        android:layout_marginTop="200dp"
+        android:layout_width="387dp"
+        android:layout_height="675dp"
+        android:layout_marginTop="50dp"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0"
-        tools:layout_editor_absoluteX="-34dp" />
+        app:layout_constraintVertical_bias="0.0" />
 
     <Switch
         android:id="@+id/sortBy"
@@ -35,9 +27,12 @@
         android:text="By date"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.949"
+        app:layout_constraintHorizontal_bias="0.907"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.076" />
+        app:layout_constraintVertical_bias="0.023"
+        android:textColor="#FFFFFA"
+        android:outlineAmbientShadowColor="#FFFFFA"
+        android:theme="@style/SCBSwitch" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

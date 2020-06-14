@@ -40,11 +40,12 @@ public class DataAdapter extends ArrayAdapter<DataTuple> {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getContext(), "BUTTON CLICKED " + tvId.getText().toString(), Toast.LENGTH_LONG).show();
                 Intent showRoute = new Intent(getContext(), MapsActivity.class);
+
                 String idToFindBy =  tvId.getText().toString();
                 idToFindBy = idToFindBy.substring(3,idToFindBy.length());
-                showRoute.putExtra("id_to_find_by", idToFindBy); // pass id to find location array by id from second db
+
+                showRoute.putExtra("id_to_find_by", idToFindBy);
                 ctx.startActivity(showRoute);
             }
         });

@@ -55,7 +55,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         String idToFindBy = getIntent().getStringExtra("id_to_find_by");
 
         Cursor data = locationDataBaseHelper.getDataWhere(idToFindBy);
-        System.out.println("_______________________________________________________________");
         String sth="";
         data.moveToFirst();
         sth+=data.getString(1) + " \n " + data.getString(2) +  " " + data.getString(4) + "\n";
@@ -77,12 +76,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public static  ArrayList<Double> convertStringToArray(String str){
         String[] elements = str.split(";");
-        System.out.println("convert======================");
         ArrayList<Double> array = new ArrayList<>();
         for (String element:
              elements) {
             array.add(Double.parseDouble(element));
-            System.out.println(element);
         }
         return array;
     }

@@ -81,7 +81,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         String query = "SELECT max(" + COL1 + ") FROM " + TABLE_NAME + ";";
         Cursor data = db.rawQuery(query,null);
-        System.out.println("GET LAST ID HELPER!!!!!!!!!!!!!!!!!!!!!!!!!!");
         return data;
     }
 }

@@ -13,31 +13,25 @@ import android.widget.Button;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    Button openPedometerBtn, openLocationBtn, showStatsBtn;
+    Button openPedometerBtn, showStatsBtn;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        openPedometerBtn = findViewById(R.id.openPedometer);
+        openPedometerBtn = findViewById(R.id.trainingBtn);
         openPedometerBtn.setOnClickListener(this);
-        openLocationBtn = findViewById(R.id.openLocation);
-        openLocationBtn.setOnClickListener(this);
+
         showStatsBtn = findViewById(R.id.showMyStatistics);
         showStatsBtn.setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
-        if(v.getId() == R.id.openPedometer)
+        if(v.getId() == R.id.trainingBtn)
         {
             Intent pedometerIntent = new Intent(MainActivity.this, HomeActivity.class);
             startActivity(pedometerIntent);
-        }
-        if(v.getId() == R.id.openLocation)
-        {
-            Intent locationIntent = new Intent(MainActivity.this, LocationActivity.class);
-            startActivity(locationIntent);
         }
         if(v.getId() == R.id.showMyStatistics)
         {

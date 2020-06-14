@@ -37,7 +37,7 @@ import java.util.Date;
 
 public class HomeActivity extends AppCompatActivity implements View.OnClickListener, SensorEventListener, StepListener {
     private TextView numberOfStepsTxtView, distanceTxtView;
-    private Button returnButton, startTrainingBtn, stopTrainingBtn, pauseTrainingBtn;
+    private Button startTrainingBtn, stopTrainingBtn, pauseTrainingBtn;
     private String numberOfStepsTxt = "Steps counted: ";
     private String numberOfMetersTxt = "Distance measured [m]: ";
 
@@ -76,12 +76,10 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         numberOfStepsTxtView = findViewById(R.id.tv_steps);
         distanceTxtView = findViewById(R.id.distance);
 
-        returnButton = findViewById(R.id.returnButton);
         startTrainingBtn = findViewById(R.id.startTrainingBtn);
         stopTrainingBtn = findViewById(R.id.stopTrainingBtn);
         pauseTrainingBtn = findViewById(R.id.pauseTrainingBtn);
 
-        returnButton.setOnClickListener(this);
         startTrainingBtn.setOnClickListener(this);
         stopTrainingBtn.setOnClickListener(this);
         pauseTrainingBtn.setOnClickListener(this);
@@ -125,9 +123,10 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     private PendingIntent getDbIntent() {
         Intent intent = new Intent(this, LocationService.class);
         intent.setAction(LocationService.ACTION_SAVE_TO_DB);
-        System.out.println("GET DB INTENT!!!!!!");
+
         String params_id = "";
         Cursor data = dbHelper.getLastId();
+
         while(data.moveToNext())
         {
             params_id = data.getString(0);
@@ -144,7 +143,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             params_id = String.valueOf(i);
 
         }
-        System.out.println(params_id + "!!!!!!!!!!!!!!!!!!!!!!!!============================");
+
         intent.putExtra("lastId", params_id);
 
         return PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -193,11 +192,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.returnButton)
-        {
-            Intent returnIntent = new Intent(HomeActivity.this, MainActivity.class);
-            startActivity(returnIntent);
-        }
         if (v.getId() == R.id.startTrainingBtn)
         {
             if (startTime == 0)
@@ -214,7 +208,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             pausedFlag = false;
             Toast.makeText(HomeActivity.this, "Started training", Toast.LENGTH_SHORT).show();
             startTrainingBtn.setEnabled(false);
-            returnButton.setEnabled(false);
 
             Dexter.withActivity(this).withPermission(Manifest.permission.ACCESS_FINE_LOCATION).withListener(new PermissionListener() {
                 @Override
@@ -240,7 +233,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             stoppedFlag = true;
             startedFlag = false;
             startTrainingBtn.setEnabled(true);
-            returnButton.setEnabled(true);
             Toast.makeText(HomeActivity.this, "Stopped training", Toast.LENGTH_SHORT).show();
             if (stopTraining())
             {
