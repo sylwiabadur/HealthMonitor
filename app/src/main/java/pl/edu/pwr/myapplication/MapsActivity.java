@@ -60,11 +60,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         sth+=data.getString(1) + " \n " + data.getString(2) +  " " + data.getString(4) + "\n";
         System.out.println(sth);
 
-        //String latitudeStr = data.getString(1);
-       // String longitudeStr = data.getString(2);
+        String latitudeStr = data.getString(1);
+        String longitudeStr = data.getString(2);
 
-        String latitudeStr = "50.11234; 50.1124; 50.113; 50.12; 50.11; 50.14; 50.13; 50.12; 50.11234";
-        String longitudeStr = "20.18; 20.19; 20.19; 20.19; 20.195; 20.19; 20.197; 20.19; 20.18";
+//        String latitudeStr = "50.11234; 50.1124; 50.113; 50.12; 50.11; 50.14; 50.13; 50.12; 50.11234";
+//        String longitudeStr = "20.18; 20.19; 20.19; 20.19; 20.195; 20.19; 20.197; 20.19; 20.18";
 
         latitude = convertStringToArray(latitudeStr);
         longitude = convertStringToArray(longitudeStr);
@@ -99,6 +99,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .clickable(true)
                 .addAll(path).color(Color.BLUE));
 
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(path.get(0), 13f));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(path.get(0), 20f));
     }
     }

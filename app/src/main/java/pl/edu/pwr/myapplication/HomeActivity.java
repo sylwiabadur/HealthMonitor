@@ -59,6 +59,14 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     LocationRequest locationRequest;
     FusedLocationProviderClient fusedLocationProviderClient;
+    @Override
+    protected void onStop()
+    {
+        super.onStop();
+        System.out.println("STOPPED STATE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-----------------------------------------");
+        //1fusedLocationProviderClient.removeLocationUpdates(getPendingIntent());
+        locationRequest = null;
+    }
 
 
     @Override
@@ -82,15 +90,15 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
         startTrainingBtn.setOnClickListener(this);
         stopTrainingBtn.setOnClickListener(this);
+        stopTrainingBtn.setEnabled(false);
         pauseTrainingBtn.setOnClickListener(this);
+        pauseTrainingBtn.setEnabled(false);
 
         loadData();
         buildLocationRequest();
     }
 
     private void updateLocation() {
-        Toast.makeText(HomeActivity.this, "STARTED FLAG, UPDATE LOCATION", Toast.LENGTH_LONG).show();
-
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -115,7 +123,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
         if (stoppedFlag==true && startedFlag==false)
         {
-            System.out.println("SAVE LOCATION TO DB!!!!!!!");
             fusedLocationProviderClient.requestLocationUpdates(locationRequest, getDbIntent());
         }
     }
@@ -208,6 +215,8 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             pausedFlag = false;
             Toast.makeText(HomeActivity.this, "Started training", Toast.LENGTH_SHORT).show();
             startTrainingBtn.setEnabled(false);
+            stopTrainingBtn.setEnabled(true);
+            pauseTrainingBtn.setEnabled(true);
 
             Dexter.withActivity(this).withPermission(Manifest.permission.ACCESS_FINE_LOCATION).withListener(new PermissionListener() {
                 @Override
@@ -233,6 +242,8 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             stoppedFlag = true;
             startedFlag = false;
             startTrainingBtn.setEnabled(true);
+            pauseTrainingBtn.setEnabled(false);
+            stopTrainingBtn.setEnabled(false);
             Toast.makeText(HomeActivity.this, "Stopped training", Toast.LENGTH_SHORT).show();
             if (stopTraining())
             {
