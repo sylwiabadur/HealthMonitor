@@ -10,10 +10,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -35,15 +31,29 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class HomeActivity extends AppCompatActivity implements View.OnClickListener, SensorEventListener, StepListener {
+public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
+
+    public class Message {
+        public void displayMessage(int resultCode, Bundle resultData)
+        {
+            switch (resultCode)
+            {
+                case 1:
+                    DecimalFormat df = new DecimalFormat("0.00");
+                    if (startedFlag == true && pausedFlag == false && stoppedFlag == false) {
+                        numSteps = resultData.getInt("STEPS_");
+                        numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
+                        distanceTxtView.setText(numberOfMetersTxt + df.format((double) numSteps * metersForStep));
+                    }
+                    break;
+            }
+        }
+    }
+
     private TextView numberOfStepsTxtView, distanceTxtView;
     private Button startTrainingBtn, stopTrainingBtn, pauseTrainingBtn;
     private String numberOfStepsTxt = "Steps counted: ";
     private String numberOfMetersTxt = "Distance measured [m]: ";
-
-    private StepDetector stepDetector;
-    private SensorManager sensorManager;
-    private Sensor accelerometer;
 
     private int numSteps = 0;
     private double metersForStep = 0.72;
@@ -51,7 +61,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     private long startTime = 0;
     private long differenceTime;
 
-    private boolean startedFlag = false;
+    public boolean startedFlag = false;
     private boolean stoppedFlag = false;
     private boolean pausedFlag = false;
 
@@ -59,27 +69,39 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     LocationRequest locationRequest;
     FusedLocationProviderClient fusedLocationProviderClient;
-    @Override
-    protected void onStop()
-    {
-        super.onStop();
-        System.out.println("STOPPED STATE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-----------------------------------------");
-        //1fusedLocationProviderClient.removeLocationUpdates(getPendingIntent());
-        locationRequest = null;
-    }
 
+    Intent pedometerService;
+    MessageReceiver receiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        dbHelper = new DatabaseHelper(this);
+        pedometerService = new Intent(this, PedometerService.class);
 
-        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        stepDetector = new StepDetector();
-        stepDetector.registerListener(this);
+        receiver = new MessageReceiver(new HomeActivity.Message());
+        pedometerService.putExtra("receiver", receiver);
+        startService(pedometerService);
+
+        setUp();
+
+        addListeners();
+
+        loadData();
+        buildLocationRequest();
+    }
+
+    @Override
+    protected void onStop()
+    {
+        super.onStop();
+        System.out.println("STOPPED STATE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-----------------------------------------");
+    }
+
+    private void setUp()
+    {
+        dbHelper = new DatabaseHelper(this);
 
         numberOfStepsTxtView = findViewById(R.id.tv_steps);
         distanceTxtView = findViewById(R.id.distance);
@@ -87,15 +109,101 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         startTrainingBtn = findViewById(R.id.startTrainingBtn);
         stopTrainingBtn = findViewById(R.id.stopTrainingBtn);
         pauseTrainingBtn = findViewById(R.id.pauseTrainingBtn);
+    }
 
+    private void addListeners()
+    {
         startTrainingBtn.setOnClickListener(this);
         stopTrainingBtn.setOnClickListener(this);
-        stopTrainingBtn.setEnabled(false);
         pauseTrainingBtn.setOnClickListener(this);
-        pauseTrainingBtn.setEnabled(false);
 
-        loadData();
-        buildLocationRequest();
+        stopTrainingBtn.setEnabled(false);
+        pauseTrainingBtn.setEnabled(false);
+    }
+
+    private void loadData()
+    {
+        System.out.println("LOAD DATA ACTIVITY -----------------------------------");
+        SharedPreferences sharedPref = getSharedPreferences(sharedPrefs, MODE_PRIVATE);
+        int a = sharedPref.getInt("steps", 0);
+        startedFlag = sharedPref.getBoolean("startFlag", false);
+        stoppedFlag = sharedPref.getBoolean("stopFlag", false);
+        pausedFlag = sharedPref.getBoolean("pauseFlag", false);
+        numSteps = 0;
+        numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
+        distanceTxtView.setText(numberOfMetersTxt+ (double)numSteps * metersForStep);
+    }
+
+    @SuppressLint("RestrictedApi")
+    private void buildLocationRequest() {
+
+        Toast.makeText(HomeActivity.this, "LOCATION REQUEST", Toast.LENGTH_LONG).show();
+
+        locationRequest = new LocationRequest();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(1000);
+        locationRequest.setFastestInterval(1000);
+        locationRequest.setSmallestDisplacement(10f);
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v.getId() == R.id.startTrainingBtn)
+        {
+            handleStartTraining();
+
+            Dexter.withActivity(this).withPermission(Manifest.permission.ACCESS_FINE_LOCATION).withListener(new PermissionListener() {
+                @Override
+                public void onPermissionGranted(PermissionGrantedResponse response) {
+                    updateLocation();
+                }
+
+                @Override
+                public void onPermissionDenied(PermissionDeniedResponse response) {
+                    Toast.makeText(HomeActivity.this, "You must accept this location", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
+
+                }
+            }).check();
+        }
+
+        if (v.getId() == R.id.stopTrainingBtn)
+        {
+            handleStopTraining();
+        }
+        if (v.getId() == R.id.pauseTrainingBtn)
+        {
+            handlePauseTraining();
+        }
+    }
+
+    private void handleStartTraining()
+    {
+        System.out.println("HANDLE START TRAINING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        pedometerService.putExtra("start", true);
+        startService(pedometerService);
+
+        if (startTime == 0)
+        {
+            startTime = System.currentTimeMillis(); // nie bylo wczesniej pomiaru
+        }
+        else
+        {
+            startTime = differenceTime + System.currentTimeMillis(); // byl wczesniej pomiar
+        }
+
+        startedFlag = true;
+        stoppedFlag = false;
+        pausedFlag = false;
+
+        Toast.makeText(HomeActivity.this, "Started training", Toast.LENGTH_SHORT).show();
+
+        startTrainingBtn.setEnabled(false);
+        stopTrainingBtn.setEnabled(true);
+        pauseTrainingBtn.setEnabled(true);
     }
 
     private void updateLocation() {
@@ -115,6 +223,41 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
         return PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
+
+    private void handleStopTraining()
+    {
+        differenceTime = System.currentTimeMillis() - startTime;
+        stoppedFlag = true;
+        startedFlag = false;
+        startTrainingBtn.setEnabled(true);
+        pauseTrainingBtn.setEnabled(false);
+        stopTrainingBtn.setEnabled(false);
+
+        Toast.makeText(HomeActivity.this, "Stopped training", Toast.LENGTH_SHORT).show();
+
+        if (stopTraining())
+        {
+            Toast.makeText(HomeActivity.this, "Data added successfully to db", Toast.LENGTH_LONG).show();
+        }
+        else  Toast.makeText(HomeActivity.this, "Sth went wrong while adding to db", Toast.LENGTH_SHORT).show();
+
+        pedometerService.putExtra("clear", true);
+        startService(pedometerService);
+    }
+
+    boolean stopTraining()
+    {
+        Date today = new Date();
+        DateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
+        String strDate = dateFormat.format(today);
+        double speedKmH = ((double)numSteps * metersForStep /1000)/((double)differenceTime/1000/3600);
+        double metersDistance = numSteps * metersForStep;
+
+        saveLocationToDb();
+
+        return dbHelper.addData(numSteps, metersDistance, strDate, speedKmH);
+    }
+
 
     private void saveLocationToDb() {
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -156,16 +299,44 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         return PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-    @SuppressLint("RestrictedApi")
-    private void buildLocationRequest() {
+    private void handlePauseTraining()
+    {
+        differenceTime = System.currentTimeMillis() - startTime;
+        pausedFlag = true;
+        startTrainingBtn.setEnabled(true);
+        Toast.makeText(HomeActivity.this, "Paused training", Toast.LENGTH_SHORT).show();
+    }
 
-        Toast.makeText(HomeActivity.this, "LOCATION REQUEST", Toast.LENGTH_LONG).show();
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (startedFlag == true)
+        {
+            pedometerService.putExtra("resume", true);
+            startService(pedometerService);
 
-        locationRequest = new LocationRequest();
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(1000);
-        locationRequest.setFastestInterval(1000);
-        locationRequest.setSmallestDisplacement(10f);
+            numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
+            distanceTxtView.setText(numberOfMetersTxt + (double)numSteps * metersForStep);
+        }
+        System.out.println("HERE ON RESUME !!!!!!!!!!!!!!!!!!");
+        numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
+        distanceTxtView.setText(numberOfMetersTxt + (double)numSteps * metersForStep);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        saveFlags();
+
+        if (startedFlag == true)
+        {
+            pedometerService.putExtra("pause", true);
+            startService(pedometerService);
+
+            saveData();
+        }
+        System.out.println("HERE ON PAUSE !!!!!!!!!!!!!!!!!!");
     }
 
     private void saveData()
@@ -175,6 +346,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         myEdit.putInt("steps", numSteps);
         myEdit.commit();
     }
+
     private void saveFlags()
     {
         SharedPreferences sharedPreferences = getSharedPreferences(sharedPrefs, MODE_PRIVATE);
@@ -183,139 +355,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         myEdit.putBoolean("stopFlag", stoppedFlag);
         myEdit.putBoolean("pauseFlag", pausedFlag);
         myEdit.commit();
-    }
-
-    private void loadData()
-    {
-        SharedPreferences sharedPref = getSharedPreferences(sharedPrefs, MODE_PRIVATE);
-        int a = sharedPref.getInt("steps", 0);
-        startedFlag = sharedPref.getBoolean("startFlag", false);
-        stoppedFlag = sharedPref.getBoolean("stopFlag", false);
-        pausedFlag = sharedPref.getBoolean("pauseFlag", false);
-        numSteps = 0;
-        numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
-        distanceTxtView.setText(numberOfMetersTxt+ (double)numSteps * metersForStep);
-    }
-
-    @Override
-    public void onClick(View v) {
-        if (v.getId() == R.id.startTrainingBtn)
-        {
-            if (startTime == 0)
-            {
-                startTime = System.currentTimeMillis(); // nie bylo wczesniej pomiaru
-            }
-            else
-            {
-                startTime = differenceTime + System.currentTimeMillis(); // byl wczesniej pomiar
-            }
-
-            startedFlag = true;
-            stoppedFlag = false;
-            pausedFlag = false;
-            Toast.makeText(HomeActivity.this, "Started training", Toast.LENGTH_SHORT).show();
-            startTrainingBtn.setEnabled(false);
-            stopTrainingBtn.setEnabled(true);
-            pauseTrainingBtn.setEnabled(true);
-
-            Dexter.withActivity(this).withPermission(Manifest.permission.ACCESS_FINE_LOCATION).withListener(new PermissionListener() {
-                @Override
-                public void onPermissionGranted(PermissionGrantedResponse response) {
-                    updateLocation();
-                }
-
-                @Override
-                public void onPermissionDenied(PermissionDeniedResponse response) {
-                    Toast.makeText(HomeActivity.this, "You must accept this location", Toast.LENGTH_SHORT).show();
-                }
-
-                @Override
-                public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
-
-                }
-            }).check();
-        }
-
-        if (v.getId() == R.id.stopTrainingBtn)
-        {
-            differenceTime = System.currentTimeMillis() - startTime;
-            stoppedFlag = true;
-            startedFlag = false;
-            startTrainingBtn.setEnabled(true);
-            pauseTrainingBtn.setEnabled(false);
-            stopTrainingBtn.setEnabled(false);
-            Toast.makeText(HomeActivity.this, "Stopped training", Toast.LENGTH_SHORT).show();
-            if (stopTraining())
-            {
-                Toast.makeText(HomeActivity.this, "Data added successfully to db", Toast.LENGTH_LONG).show();
-            }
-            else  Toast.makeText(HomeActivity.this, "Sth went wrong while adding to db", Toast.LENGTH_SHORT).show();
-        }
-        if (v.getId() == R.id.pauseTrainingBtn)
-        {
-            differenceTime = System.currentTimeMillis() - startTime;
-            pausedFlag = true;
-            startTrainingBtn.setEnabled(true);
-            Toast.makeText(HomeActivity.this, "Paused training", Toast.LENGTH_SHORT).show();
-        }
-    }
-    boolean stopTraining()
-    {
-        Date today = new Date();
-        DateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
-        String strDate = dateFormat.format(today);
-        double speedKmH = ((double)numSteps * metersForStep /1000)/((double)differenceTime/1000/3600);
-        double metersDistance = numSteps * metersForStep;
-
-        saveLocationToDb();
-
-        return dbHelper.addData(numSteps, metersDistance, strDate, speedKmH);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-        if (startedFlag==true)
-        {
-            numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
-            distanceTxtView.setText(numberOfMetersTxt + (double)numSteps * metersForStep);
-        }
-        System.out.println("NOT HERE ON RESUME !!!!!!!!!!!!!!!!!!");
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        sensorManager.unregisterListener(this);
-        saveFlags();
-        if (startedFlag==true)
-        {
-            saveData();
-        }
-        System.out.println("NOT HERE ON PAUSE !!!!!!!!!!!!!!!!!!");
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            stepDetector.updateAccelerometer(event.timestamp, event.values[0], event.values[1], event.values[2]);
-        }
-    }
-
-    @Override
-    public void step(long timeNs) {
-        DecimalFormat df = new DecimalFormat("0.00");
-        if (startedFlag==true && pausedFlag==false && stoppedFlag==false)
-        {
-            numSteps++;
-            numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
-            distanceTxtView.setText(numberOfMetersTxt + df.format((double)numSteps * metersForStep));
-        }
     }
 
 }
