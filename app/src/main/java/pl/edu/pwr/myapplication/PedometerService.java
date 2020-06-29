@@ -10,7 +10,8 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.ResultReceiver;
 
-public class PedometerService extends IntentService implements SensorEventListener, StepListener {
+public class PedometerService extends IntentService implements SensorEventListener, StepListener
+{
 
     private StepDetector stepDetector;
     private SensorManager sensorManager;
@@ -24,24 +25,27 @@ public class PedometerService extends IntentService implements SensorEventListen
 
     private boolean startFlag = false;
 
-    public PedometerService() {
+    public PedometerService()
+    {
         super("PedometerService");
         numSteps = 0;
     }
 
-
-    private void onResume() {
+    private void onResume()
+    {
         bundle.putInt("STEPS_", numSteps);
         resultReceiver.send(1, bundle);
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
-    private void onPause() {
+    private void onPause()
+    {
         sensorManager.unregisterListener(this);
         saveData();
     }
 
-    private void onClear() {
+    private void onClear()
+    {
 //        numSteps = 0;
 //
 //        bundle.putInt("STEPS_", numSteps);
@@ -56,7 +60,8 @@ public class PedometerService extends IntentService implements SensorEventListen
         myEdit.putInt("steps", numSteps);
         myEdit.commit();
 
-        if (startFlag) {
+        if (startFlag)
+        {
             bundle.putInt("STEPS_", numSteps);
             resultReceiver.send(1, bundle);
         }
@@ -78,7 +83,8 @@ public class PedometerService extends IntentService implements SensorEventListen
     }
 
     @Override
-    public void onCreate() {
+    public void onCreate()
+    {
         super.onCreate();
         System.out.println("ON CREATE PEDOMETER SERVICE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -93,7 +99,8 @@ public class PedometerService extends IntentService implements SensorEventListen
     }
 
     @Override
-    protected void onHandleIntent(Intent intent) {
+    protected void onHandleIntent(Intent intent)
+    {
         System.out.println("ON HANDLE INTENT PEDOMETER SERIVCE !!!!!!!!!!!!!!!!!!!!!!!!!");
         resultReceiver = intent.getParcelableExtra("receiver");
 
@@ -117,8 +124,10 @@ public class PedometerService extends IntentService implements SensorEventListen
     }
 
     @Override
-    public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+    public void onSensorChanged(SensorEvent event)
+    {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+        {
             stepDetector.updateAccelerometer(event.timestamp, event.values[0], event.values[1], event.values[2]);
         }
     }
@@ -127,8 +136,10 @@ public class PedometerService extends IntentService implements SensorEventListen
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     @Override
-    public void step(long timeNs) {
-        if (startFlag) {
+    public void step(long timeNs)
+    {
+        if (startFlag)
+        {
             numSteps++;
             System.out.println(numSteps + " !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 

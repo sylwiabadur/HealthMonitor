@@ -2,32 +2,24 @@ package pl.edu.pwr.myapplication;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.Switch;
-
-import java.lang.reflect.Array;
-import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
-public class StatsActivity extends AppCompatActivity implements View.OnClickListener {
+
+public class StatsActivity extends AppCompatActivity implements View.OnClickListener
+{
 
     private Switch sortByBtn;
     private DatabaseHelper dbHelper;
     private ListView listView;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stats);
 
@@ -40,13 +32,14 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
         populateListView(3); // by default sort by date
     }
 
-    private void populateListView(int option) {
+    private void populateListView(int option)
+    {
         Cursor data;
         if (option == 1)
         {
             data = dbHelper.sortByDate();
         }
-        else if (option==2)
+        else if (option == 2)
         {
             data = dbHelper.sortBySteps();
         }
@@ -54,25 +47,29 @@ public class StatsActivity extends AppCompatActivity implements View.OnClickList
         {
             data = dbHelper.getData();
         }
+
         ArrayList<DataTuple> arrayOfTuples = new ArrayList<>();
+
         while(data.moveToNext())
         {
             DataTuple dataTuple = new DataTuple(data.getString(3), data.getString(1), data.getString(2), data.getString(4), data.getString(0));
             arrayOfTuples.add(dataTuple);
         }
+
         DataAdapter adapter = new DataAdapter(this, arrayOfTuples);
         listView.setAdapter(adapter);
     }
 
     @Override
-    public void onClick(View v) {
-        if(sortByBtn.isChecked())
+    public void onClick(View v)
+    {
+        if (sortByBtn.isChecked())
         {
             sortByBtn.setText("By steps");
             populateListView(2);
         }
 
-        if(!sortByBtn.isChecked())
+        else
         {
             sortByBtn.setText("By date");
             populateListView(1);

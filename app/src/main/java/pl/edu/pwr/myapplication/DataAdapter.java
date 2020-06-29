@@ -8,7 +8,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -18,7 +17,8 @@ public class DataAdapter extends ArrayAdapter<DataTuple> {
 
     private Context ctx;
 
-    public DataAdapter(@NonNull Context context, ArrayList<DataTuple> dataTuples) {
+    public DataAdapter(@NonNull Context context, ArrayList<DataTuple> dataTuples)
+    {
         super(context, 0, dataTuples);
         this.ctx = context;
     }

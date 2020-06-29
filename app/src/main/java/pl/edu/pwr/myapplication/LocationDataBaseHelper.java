@@ -8,7 +8,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import androidx.annotation.Nullable;
 
-public class LocationDataBaseHelper extends SQLiteOpenHelper {
+public class LocationDataBaseHelper extends SQLiteOpenHelper
+{
     private static final String TABLE_NAME = "date_location_table";
     private String COL1="ID";
     private String COL2="longitude";
@@ -17,19 +18,22 @@ public class LocationDataBaseHelper extends SQLiteOpenHelper {
     private String COL5="params_id";
 
 
-    public LocationDataBaseHelper(@Nullable Context context) {
+    public LocationDataBaseHelper(@Nullable Context context)
+    {
         super(context, TABLE_NAME, null, 1);
     }
 
     @Override
-    public void onCreate(SQLiteDatabase db) {
+    public void onCreate(SQLiteDatabase db)
+    {
         String createTable = "CREATE TABLE " + TABLE_NAME + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COL2 + " TEXT, " + COL3 + " TEXT, " + COL4 + " DATE, " + COL5 + " INTEGER )";
         db.execSQL(createTable);
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
+    {
         db.execSQL("DROP IF TABLE EXISTS " + TABLE_NAME);
         onCreate(db);
     }
@@ -45,7 +49,7 @@ public class LocationDataBaseHelper extends SQLiteOpenHelper {
 
         long result = db.insert(TABLE_NAME, null, contentValues);
 
-        if(result == -1)
+        if (result == -1)
             return false;
         else return true;
     }

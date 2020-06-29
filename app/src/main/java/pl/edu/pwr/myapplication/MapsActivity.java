@@ -39,14 +39,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.zip.DeflaterOutputStream;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback
+{
 
     private GoogleMap mMap;
     LocationDataBaseHelper locationDataBaseHelper;
     ArrayList<Double> latitude,longitude;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
@@ -55,16 +57,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         String idToFindBy = getIntent().getStringExtra("id_to_find_by");
 
         Cursor data = locationDataBaseHelper.getDataWhere(idToFindBy);
-        String sth="";
+        String sth = "";
         data.moveToFirst();
-        sth+=data.getString(1) + " \n " + data.getString(2) +  " " + data.getString(4) + "\n";
+        sth += data.getString(1) + " \n " + data.getString(2) +  " " + data.getString(4) + "\n";
         System.out.println(sth);
 
         String latitudeStr = data.getString(1);
         String longitudeStr = data.getString(2);
-
-//        String latitudeStr = "50.11234; 50.1124; 50.113; 50.12; 50.11; 50.14; 50.13; 50.12; 50.11234";
-//        String longitudeStr = "20.18; 20.19; 20.19; 20.19; 20.195; 20.19; 20.197; 20.19; 20.18";
 
         latitude = convertStringToArray(latitudeStr);
         longitude = convertStringToArray(longitudeStr);
@@ -74,11 +73,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapFragment.getMapAsync(this);
     }
 
-    public static  ArrayList<Double> convertStringToArray(String str){
+    public static  ArrayList<Double> convertStringToArray(String str)
+    {
         String[] elements = str.split(";");
         ArrayList<Double> array = new ArrayList<>();
-        for (String element:
-             elements) {
+
+        for (String element : elements)
+        {
             array.add(Double.parseDouble(element));
         }
         return array;
@@ -86,11 +87,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(GoogleMap googleMap)
+    {
         mMap = googleMap;
 
         List<LatLng> path = new ArrayList<>();
-        for (int i=0;i<longitude.size();++i)
+
+        for (int i = 0; i < longitude.size(); ++i)
         {
             path.add(new LatLng(latitude.get(i), longitude.get(i)));
         }
@@ -101,4 +104,4 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(path.get(0), 20f));
     }
-    }
+}

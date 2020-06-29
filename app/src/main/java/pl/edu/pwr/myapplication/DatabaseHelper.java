@@ -18,19 +18,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private String COL4="date";
     private String COL5="speed";
 
-    public DatabaseHelper(@Nullable Context context) {
+    public DatabaseHelper(@Nullable Context context)
+    {
         super(context, TABLE_NAME, null, 1);
     }
 
     @Override
-    public void onCreate(SQLiteDatabase db) {
+    public void onCreate(SQLiteDatabase db)
+    {
         String createTable = "CREATE TABLE " + TABLE_NAME + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
             COL2 + " INTEGER," + COL3 + " REAL, " + COL4 + " DATE, "+ COL5 + " REAL)";
         db.execSQL(createTable);
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
+    {
         db.execSQL("DROP IF TABLE EXISTS " + TABLE_NAME);
         onCreate(db);
     }
@@ -47,7 +50,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         long result = db.insert(TABLE_NAME, null, contentValues);
 
-        if(result == -1)
+        if (result == -1)
             return false;
         else return true;
     }

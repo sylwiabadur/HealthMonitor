@@ -7,10 +7,13 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener
+{
     Button openPedometerBtn, showStatsBtn, draftBtn;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -25,7 +28,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onClick(View v) {
+    public void onClick(View v)
+    {
         if (v.getId() == R.id.trainingBtn)
         {
             Intent pedometerIntent = new Intent(MainActivity.this, HomeActivity.class);

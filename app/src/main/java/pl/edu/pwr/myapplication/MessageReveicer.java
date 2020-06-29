@@ -6,10 +6,12 @@ import android.os.Handler;
 import android.os.ResultReceiver;
 
 @SuppressLint("Pedometer")
-class MessageReceiver extends ResultReceiver {
+class MessageReceiver extends ResultReceiver
+{
     private HomeActivity.Message message;
 
-    public MessageReceiver(HomeActivity.Message message) {
+    public MessageReceiver(HomeActivity.Message message)
+    {
         super(new Handler());
         this.message = message;
     }
