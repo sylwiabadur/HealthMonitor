@@ -18,12 +18,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <receiver
-            android:name=".MessageReveicer"
-            android:enabled="true"
-            android:exported="true"></receiver>
-
-        <activity android:name=".DraftActivity" />
 
         <service
             android:name=".PedometerService"
@@ -60,6 +54,7 @@
         </activity>
 
         <receiver android:name=".LocationService" />
+        <receiver android:name=".MessageReceiver"/>
     </application>
 
 </manifest>

@@ -9,7 +9,7 @@ import android.widget.Button;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener
 {
-    Button openPedometerBtn, showStatsBtn, draftBtn;
+    Button openPedometerBtn, showStatsBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -22,9 +22,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         showStatsBtn = findViewById(R.id.showMyStatistics);
         showStatsBtn.setOnClickListener(this);
-
-        draftBtn = findViewById(R.id.buttonDraft);
-        draftBtn.setOnClickListener(this);
     }
 
     @Override

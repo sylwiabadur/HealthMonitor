@@ -53,7 +53,7 @@
     <Button
         android:id="@+id/showRouteBtn"
         style="@style/Widget.AppCompat.Button"
-        android:layout_width="match_parent"
+        android:layout_width="351dp"
         android:layout_height="match_parent"
         android:background="@drawable/showroute_bg"
         android:text="Show route" />
