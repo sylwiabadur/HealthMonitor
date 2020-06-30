@@ -1,16 +1,23 @@
 package pl.edu.pwr.myapplication;
 
-import android.app.IntentService;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Bundle;
-import android.os.ResultReceiver;
+import android.os.Handler;
+import android.os.IBinder;
 
-public class PedometerService extends IntentService implements SensorEventListener, StepListener
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+
+public class PedometerService extends Service implements SensorEventListener, StepListener
 {
 
     private StepDetector stepDetector;
@@ -18,108 +25,92 @@ public class PedometerService extends IntentService implements SensorEventListen
     private Sensor accelerometer;
 
     private int numSteps;
-    private String sharedPrefs = "sharedPre";
+    private String sharedPrefs = "mySharedPrefs";
 
-    ResultReceiver resultReceiver;
-    Bundle bundle;
+    private SharedPreferences sharedPref;
 
     private boolean startFlag = false;
+    private boolean serviceStopped = false;
 
-    public PedometerService()
-    {
-        super("PedometerService");
-        numSteps = 0;
-    }
+    NotificationManager notificationManager;
 
-    private void onResume()
-    {
-        bundle.putInt("STEPS_", numSteps);
-        resultReceiver.send(1, bundle);
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-    }
+    Intent intent;
+    private static final String TAG = "PedometerService";
+    public static final String BROADCAST_ACTION = "pl.edu.pwr.myapplication.broadcast";
+    private final Handler handler = new Handler();
 
-    private void onPause()
-    {
-        sensorManager.unregisterListener(this);
-        saveData();
-    }
+    public PedometerService(){}
 
-    private void onClear()
-    {
-//        numSteps = 0;
-//
-//        bundle.putInt("STEPS_", numSteps);
-//        resultReceiver.send(1, bundle);
-    }
-
-    private void saveData()
-    {
-        System.out.println("SAVE DATA PEDOMETER SERVICE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        SharedPreferences sharedPreferences = getSharedPreferences(sharedPrefs, MODE_PRIVATE);
-        SharedPreferences.Editor myEdit = sharedPreferences.edit();
-        myEdit.putInt("steps", numSteps);
-        myEdit.commit();
-
-        if (startFlag)
-        {
-            bundle.putInt("STEPS_", numSteps);
-            resultReceiver.send(1, bundle);
-        }
-    }
 
     private void loadData()
     {
-        SharedPreferences sharedPref = getSharedPreferences(sharedPrefs, MODE_PRIVATE);
-        int a = sharedPref.getInt("steps", 0);
-        numSteps = a;
+        numSteps = 0;
 
-        System.out.println("LOAD DATA PEDOMIETER SERVICE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-
-        if (resultReceiver!=null)
-        {
-            bundle.putInt("STEPS_", numSteps);
-            resultReceiver.send(1, bundle);
-        }
+        broadcastSensorValue();
     }
 
     @Override
     public void onCreate()
     {
         super.onCreate();
-        System.out.println("ON CREATE PEDOMETER SERVICE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
+        sharedPref = getSharedPreferences(sharedPrefs, MODE_PRIVATE);
+
+        intent = new Intent(BROADCAST_ACTION);
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId)
+    {
+        showNotification();
+
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         stepDetector = new StepDetector();
         stepDetector.registerListener(this);
-        bundle = new Bundle();
 
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
 
+        handler.removeCallbacks(updateBroadcastData);
+        handler.post(updateBroadcastData);
+
         loadData();
+
+        return START_STICKY;
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent)
+    {
+        return null;
     }
 
     @Override
-    protected void onHandleIntent(Intent intent)
+    public void onDestroy()
     {
-        System.out.println("ON HANDLE INTENT PEDOMETER SERIVCE !!!!!!!!!!!!!!!!!!!!!!!!!");
-        resultReceiver = intent.getParcelableExtra("receiver");
+        super.onDestroy();
 
-        if (intent.getBooleanExtra("resume",false) == true)
-        {
-            onResume();
-        }
-        if (intent.getBooleanExtra("pause", false) == true)
-        {
-            onPause();
-        }
-        if (intent.getBooleanExtra("clear", false) == true)
-        {
-            onClear();
-        }
-        if (intent.getBooleanExtra("start", false) == true)
+        serviceStopped = true;
+
+        dismissNotification();
+    }
+
+    @Override
+    public void onLowMemory()
+    {
+        super.onLowMemory();
+    }
+
+    private void handleIntent()
+    {
+        if (sharedPref.getBoolean("start", false) == true)
         {
             startFlag = true;
-            System.out.println("START FROM SERVICE ______________________________________________________________________________________________________________________________");
+        }
+        else
+        {
+            startFlag = false;
         }
     }
 
@@ -141,10 +132,55 @@ public class PedometerService extends IntentService implements SensorEventListen
         if (startFlag)
         {
             numSteps++;
-            System.out.println(numSteps + " !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-
-            bundle.putInt("STEPS_", numSteps);
-            resultReceiver.send(1, bundle);
+            System.out.println(numSteps + "--------------------------");
         }
+    }
+
+    private void showNotification()
+    {
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this);
+        notificationBuilder.setContentTitle("Health monitor");
+        notificationBuilder.setContentText("Counting steps");
+        notificationBuilder.setSmallIcon(R.mipmap.ic_launcher);
+        notificationBuilder.setColor(Color.parseColor("#6600cc"));
+        int colorLED = Color.argb(255, 0, 255, 0);
+        notificationBuilder.setLights(colorLED, 500, 500);
+
+        notificationBuilder.setPriority(Notification.PRIORITY_HIGH);
+        notificationBuilder.setOngoing(true);
+
+        PendingIntent resultPendingIntent = PendingIntent.getActivity(this,0,new Intent(),0);
+        notificationBuilder.setContentIntent(resultPendingIntent);
+
+        notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        notificationManager.notify(0, notificationBuilder.build());
+    }
+
+    private void dismissNotification()
+    {
+        notificationManager.cancel(0);
+    }
+
+    private Runnable updateBroadcastData = new Runnable()
+    {
+        public void run()
+        {
+            if (!serviceStopped)
+            {
+                broadcastSensorValue();
+
+                handleIntent();
+
+                handler.postDelayed(this, 500);
+            }
+        }
+    };
+
+    private void broadcastSensorValue()
+    {
+        intent.putExtra("STEPS_", numSteps);
+
+        sendBroadcast(intent);
     }
 }

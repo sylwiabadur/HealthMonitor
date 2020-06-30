@@ -15,8 +15,8 @@ import java.util.Date;
 
 public class LocationService extends BroadcastReceiver
 {
-    public static final String ACTION_PROCESS_UPDATE="edmt.dev.googlelocationbackground.UPDATE_LOCATION";
-    public static final String ACTION_SAVE_TO_DB="edmt.dev.googlelocationbackground.SAVE_TO_DB";
+    public static final String ACTION_PROCESS_UPDATE = "edmt.dev.googlelocationbackground.UPDATE_LOCATION";
+    public static final String ACTION_SAVE_TO_DB = "edmt.dev.googlelocationbackground.SAVE_TO_DB";
 
     LocationDataBaseHelper locationDataBaseHelper;
 
@@ -28,10 +28,9 @@ public class LocationService extends BroadcastReceiver
     @Override
     public void onReceive(Context context, Intent intent)
     {
-
         locationDataBaseHelper = new LocationDataBaseHelper(context);
 
-        Toast.makeText(context, "SERVICE IS  WORKING!!!!!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "Getting location updates", Toast.LENGTH_SHORT).show();
 
         if (intent!=null)
         {
@@ -39,7 +38,6 @@ public class LocationService extends BroadcastReceiver
 
             if (ACTION_PROCESS_UPDATE.equals(action))
             {
-                Toast.makeText(context, "MEASURED!!!!!", Toast.LENGTH_SHORT).show();
                 LocationResult result = LocationResult.extractResult(intent);
 
                 if (result!=null)
@@ -51,7 +49,6 @@ public class LocationService extends BroadcastReceiver
                     {
                         latitude.add(location.getLatitude());
                         longitude.add(location.getLongitude());
-                        Toast.makeText(context, locationStr, Toast.LENGTH_SHORT).show();
                         System.out.println(locationStr);
                     }
                     catch (Exception e)
@@ -63,7 +60,6 @@ public class LocationService extends BroadcastReceiver
 
             if (ACTION_SAVE_TO_DB.equals(action))
             {
-                Toast.makeText(context, "SAVING TO DB", Toast.LENGTH_LONG).show();
                 String params_id = intent.getExtras().getString("lastId");
                 saveToDb(locationDataBaseHelper, params_id);
             }

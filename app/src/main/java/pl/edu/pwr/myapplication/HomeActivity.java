@@ -6,7 +6,10 @@ import androidx.core.app.ActivityCompat;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -33,23 +36,6 @@ import java.util.Date;
 
 public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
 
-    public class Message {
-        public void displayMessage(int resultCode, Bundle resultData)
-        {
-            switch (resultCode)
-            {
-                case 1:
-                    DecimalFormat df = new DecimalFormat("0.00");
-                    if (startedFlag == true && pausedFlag == false && stoppedFlag == false) {
-                        numSteps = resultData.getInt("STEPS_");
-                        numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
-                        distanceTxtView.setText(numberOfMetersTxt + df.format((double) numSteps * metersForStep));
-                    }
-                    break;
-            }
-        }
-    }
-
     private TextView numberOfStepsTxtView, distanceTxtView;
     private Button startTrainingBtn, stopTrainingBtn, pauseTrainingBtn;
     private String numberOfStepsTxt = "Steps counted: ";
@@ -58,6 +44,9 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     private int numSteps = 0;
     private double metersForStep = 0.72;
     private String sharedPrefs = "mySharedPrefs";
+
+    private SharedPreferences sharedPreferences;
+    private SharedPreferences.Editor myEdit;
     private long startTime = 0;
     private long differenceTime;
 
@@ -65,24 +54,22 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     private boolean stoppedFlag = false;
     private boolean pausedFlag = false;
 
-    DatabaseHelper dbHelper;
+    private DatabaseHelper dbHelper;
 
-    LocationRequest locationRequest;
-    FusedLocationProviderClient fusedLocationProviderClient;
+    private LocationRequest locationRequest;
+    private FusedLocationProviderClient fusedLocationProviderClient;
 
-    Intent pedometerService;
-    MessageReceiver receiver;
+    private Intent pedometerService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        pedometerService = new Intent(this, PedometerService.class);
+        sharedPreferences = getSharedPreferences(sharedPrefs, MODE_PRIVATE);
+        myEdit = sharedPreferences.edit();
 
-        receiver = new MessageReceiver(new HomeActivity.Message());
-        pedometerService.putExtra("receiver", receiver);
-        startService(pedometerService);
+        pedometerService = new Intent(this, PedometerService.class);
 
         setUp();
 
@@ -96,7 +83,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     protected void onStop()
     {
         super.onStop();
-        System.out.println("STOPPED STATE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-----------------------------------------");
     }
 
     private void setUp()
@@ -123,7 +109,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     private void loadData()
     {
-        System.out.println("LOAD DATA ACTIVITY -----------------------------------");
         SharedPreferences sharedPref = getSharedPreferences(sharedPrefs, MODE_PRIVATE);
         int a = sharedPref.getInt("steps", 0);
         startedFlag = sharedPref.getBoolean("startFlag", false);
@@ -135,10 +120,8 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @SuppressLint("RestrictedApi")
-    private void buildLocationRequest() {
-
-        Toast.makeText(HomeActivity.this, "LOCATION REQUEST", Toast.LENGTH_LONG).show();
-
+    private void buildLocationRequest()
+    {
         locationRequest = new LocationRequest();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         locationRequest.setInterval(1000);
@@ -182,18 +165,20 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     private void handleStartTraining()
     {
-        System.out.println("HANDLE START TRAINING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        pedometerService.putExtra("start", true);
-        startService(pedometerService);
-
         if (startTime == 0)
         {
             startTime = System.currentTimeMillis(); // nie bylo wczesniej pomiaru
+
+            startService(new Intent(getBaseContext(), PedometerService.class));
+            registerReceiver(broadcastReceiver, new IntentFilter(PedometerService.BROADCAST_ACTION));
         }
         else
         {
             startTime = differenceTime + System.currentTimeMillis(); // byl wczesniej pomiar
         }
+
+        myEdit.putBoolean("start", true);
+        myEdit.commit();
 
         startedFlag = true;
         stoppedFlag = false;
@@ -241,8 +226,8 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
         else  Toast.makeText(HomeActivity.this, "Sth went wrong while adding to db", Toast.LENGTH_SHORT).show();
 
-        pedometerService.putExtra("clear", true);
-        startService(pedometerService);
+        myEdit.putBoolean("start", false);
+        myEdit.commit();
     }
 
     boolean stopTraining()
@@ -305,56 +290,76 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         pausedFlag = true;
         startTrainingBtn.setEnabled(true);
         Toast.makeText(HomeActivity.this, "Paused training", Toast.LENGTH_SHORT).show();
+
+        myEdit.putBoolean("start", false);
+        myEdit.commit();
     }
 
     @Override
-    public void onResume() {
+    public void onResume()
+    {
         super.onResume();
+
         if (startedFlag == true)
         {
-            pedometerService.putExtra("resume", true);
-            startService(pedometerService);
+            myEdit.putBoolean("onResume", true);
+            myEdit.commit();
 
             numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
             distanceTxtView.setText(numberOfMetersTxt + (double)numSteps * metersForStep);
         }
-        System.out.println("HERE ON RESUME !!!!!!!!!!!!!!!!!!");
         numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
         distanceTxtView.setText(numberOfMetersTxt + (double)numSteps * metersForStep);
     }
 
     @Override
-    public void onPause() {
+    public void onPause()
+    {
         super.onPause();
 
         saveFlags();
 
         if (startedFlag == true)
         {
-            pedometerService.putExtra("pause", true);
-            startService(pedometerService);
+            myEdit.putBoolean("onPause", true);
+            myEdit.commit();
 
             saveData();
         }
-        System.out.println("HERE ON PAUSE !!!!!!!!!!!!!!!!!!");
     }
 
     private void saveData()
     {
-        SharedPreferences sharedPreferences = getSharedPreferences(sharedPrefs, MODE_PRIVATE);
-        SharedPreferences.Editor myEdit = sharedPreferences.edit();
         myEdit.putInt("steps", numSteps);
         myEdit.commit();
     }
 
     private void saveFlags()
     {
-        SharedPreferences sharedPreferences = getSharedPreferences(sharedPrefs, MODE_PRIVATE);
-        SharedPreferences.Editor myEdit = sharedPreferences.edit();
         myEdit.putBoolean("startFlag", startedFlag);
         myEdit.putBoolean("stopFlag", stoppedFlag);
         myEdit.putBoolean("pauseFlag", pausedFlag);
         myEdit.commit();
+    }
+
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver()
+    {
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            updateSteps(intent);
+        }
+    };
+
+    private void updateSteps(Intent intent)
+    {
+        DecimalFormat df = new DecimalFormat("0.00");
+        if (startedFlag == true && pausedFlag == false && stoppedFlag == false)
+        {
+            numSteps = intent.getIntExtra("STEPS_", 0);
+            numberOfStepsTxtView.setText(numberOfStepsTxt + numSteps);
+            distanceTxtView.setText(numberOfMetersTxt + df.format((double) numSteps * metersForStep));
+        }
     }
 
 }
