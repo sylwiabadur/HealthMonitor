@@ -174,7 +174,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         }
         else
         {
-            startTime = differenceTime + System.currentTimeMillis(); // byl wczesniej pomiar
+            startTime = System.currentTimeMillis() - differenceTime; // byl wczesniej pomiar
         }
 
         myEdit.putBoolean("start", true);
@@ -212,6 +212,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     private void handleStopTraining()
     {
         differenceTime = System.currentTimeMillis() - startTime;
+
         stoppedFlag = true;
         startedFlag = false;
         startTrainingBtn.setEnabled(true);
